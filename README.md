@@ -8,7 +8,7 @@
 ### It is also possible to edit the files manually using nano directly from the terminal.
 
 ```shell
-$ sudo refind-stanza-creator-xx_XX.sh
+$ sudo bash refind-stanza-creator-xx_XX.sh
 ```
 
 # Screenshot
