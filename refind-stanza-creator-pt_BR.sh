@@ -10,9 +10,9 @@ NC='\033[0m' # No Color
 
 # Funções de exibição
 header() {
-    echo -e "${LIGHT_CYAN}\n=========================================="
+    echo -e "${LIGHT_CYAN}\n=========================================================="
     echo " $1"
-    echo -e "==========================================${NC}"
+    echo -e "==========================================================${NC}"
 }
 
 info() { echo -e "${CYAN}[INFO]${NC} $1"; }
@@ -76,7 +76,6 @@ show_partuuids() {
 # Mostrar partição raiz
 mostra_particao_raiz() {
     header "Partição do sistema atual"
-    # Pega o dispositivo da raiz e remove o subvolume (ex: /dev/vda2[@])
     root_device=$(findmnt -n -o SOURCE / | sed 's/\[.*\]//')
     root_partuuid=$(blkid -s PARTUUID -o value "$root_device")
     echo -e "${YELLOW}Dispositivo montado em /: ${NC}$root_device"
@@ -97,20 +96,38 @@ show_boot_files() {
 
 # Lista de ícones para refind.conf
 listar_ícones() {
-    local pasta="/boot/EFI/refind"
-    echo -e "\nÍcones encontrados na pasta refind (com caminho completo):"
+    local pasta=""
+
+    if [[ -d "/boot/EFI/refind" ]]; then
+        pasta="/boot/EFI/refind"
+    elif [[ -d "/boot/efi/EFI/refind" ]]; then
+        pasta="/boot/efi/EFI/refind"
+    else
+        echo -e "\nA pasta do rEFInd não foi encontrada em /boot."
+        return
+    fi
+
+    header "Ícones encontrados na pasta refind (caminho relativo a EFI/):"
     find "$pasta" -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.icns" \) | \
-        sed "s|^/boot/||" | sort
+        sed -E 's|^.*/(EFI/.*)|\1|' | sort
     echo
 }
 
-# Lista de ícones para refind-btrfs.conf
+# Lista os ícones para o refind-btrfs
 listar_ícones_refind_btrfs() {
-    local refind_dir="/boot/EFI/refind"
-    echo -e "\n${CYAN}Ícones encontrados na pasta refind:${NC}"
-    find "$refind_dir" -type f \( -iname "*.png" -o -iname "*.icns" -o -iname "*.svg" \) 2>/dev/null \
-        | sed "s|$refind_dir/||" \
-        | sort
+    local pasta=""
+    if [[ -d "/boot/EFI/refind" ]]; then
+        pasta="/boot/EFI/refind"
+    elif [[ -d "/boot/efi/EFI/refind" ]]; then
+        pasta="/boot/efi/EFI/refind"
+    else
+        echo -e "\nA pasta do rEFInd não foi encontrada em /boot."
+        return
+    fi
+    echo -e "${CYAN}Ícones encontrados na pasta refind (caminho relativo a refind/):${NC}"
+    find "$pasta" -type f -iname "*.png" \
+        | sed -E "s|^$pasta/||" | sort
+    echo
 }
 
 # Subvolumes
