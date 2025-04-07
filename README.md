@@ -1,0 +1,15 @@
+# refind stanza creator
+# AUTHOR: diegons490
+
+# This script aims to facilitate the configuration of rEFInd and refind-btrfs (btrfs snapshots).
+
+# It includes functions to create and restore backups of files
+
+# It is also possible to edit the files manually using nano directly from the terminal.
+
+```shell
+$ sudo refind-stanza-creator-xx_XX.sh
+```
+
+# Screenshot
+![screenshot](/preview.png?raw=true)Script por diegons490 
