@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# AUTOR: diegons490
 # Cores para melhorar a visualização
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -58,7 +58,6 @@ cria_backup() {
     busca_refind_conf
     BACKUP_FILE="${REFIND_CONF}.bak"
     MARKER="# MODIFIED_BY_SCRIPT: refind.conf modificado pelo script"
-
     if grep -q "$MARKER" "$REFIND_CONF"; then
         warning "Arquivo já modificado anteriormente. Backup não recriado."
     else
@@ -118,7 +117,6 @@ listar_ícones() {
         echo -e "\nA pasta do rEFInd não foi encontrada em /boot."
         return
     fi
-
     header "Ícones encontrados na pasta refind (caminho relativo a EFI/):"
     find "$pasta" -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.icns" \) | \
         sed -E 's|^.*/(EFI/.*)|\1|' | sort
@@ -180,7 +178,6 @@ adiciona_boot_stanza() {
     ask "Digite o nome do arquivo do initrd:" INITRD_FILE
     LOADER_PATH="${KERNEL_FILE}"
     INITRD_PATH="${INITRD_FILE}"
-
     if [ -f /boot/refind_linux.conf ]; then
         header "Conteúdo de refind_linux.conf"
         sed 's/^/  /' /boot/refind_linux.conf
@@ -205,7 +202,6 @@ adiciona_boot_stanza() {
                 ;;
         esac
     fi
-
     echo
     echo -e "${YELLOW}Exemplo: quiet zswap.enabled=0 root=PARTUUID=xxxx-xxxx rw rootflags=subvol=@ quiet splash${NC}"
     echo
@@ -241,7 +237,6 @@ configure_refind_btrfs() {
     reset
     local REFIND_BTRFS_CONF="/etc/refind-btrfs.conf"
     local BACKUP_RB="/etc/refind-btrfs.conf.bak"
-
     header "Configurar refind-btrfs"
 
     # Cria backup, se necessário
@@ -443,7 +438,6 @@ restaurar_backup_refind_btrfs() {
     reset
     local REFIND_BTRFS_CONF="/etc/refind-btrfs.conf"
     local BACKUP_FILE="${REFIND_BTRFS_CONF}.bak"
-
     info "Buscando refind-btrfs.conf em /etc..."
     [ -f "$REFIND_BTRFS_CONF" ] && success "Encontrado: $REFIND_BTRFS_CONF" || { error "Arquivo não encontrado."; return; }
     [ -f "$BACKUP_FILE" ] && sudo cp "$BACKUP_FILE" "$REFIND_BTRFS_CONF" && success "Backup restaurado com sucesso!" || error "Backup não encontrado: $BACKUP_FILE"
@@ -488,18 +482,14 @@ criar_snapshot_btrfs() {
         error "Nome do snapshot não pode ser vazio. Operação abortada."
         return 1
     fi
-
     info "Criando snapshot '${snapshot_name}' usando o snapper..."
 
     # Criação do snapshot usando snapper com a descrição informada
     snapper create --description "${snapshot_name}"
-
     if [ $? -eq 0 ]; then
         snapper list
         success "Snapshot '${snapshot_name}' criado com sucesso!"
-
         info "Atualizando refind-btrfs..."
-        # Executa o comando para atualizar o rEFInd com o novo snapshot
         refind-btrfs
         if [ $? -eq 0 ]; then
             success "O rEFInd foi atualizado com o novo snapshot!"

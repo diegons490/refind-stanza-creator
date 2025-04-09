@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# AUTHOR: diegons490
 # Colors for better visualization
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -58,7 +58,6 @@ create_backup() {
     find_refind_conf
     BACKUP_FILE="${REFIND_CONF}.bak"
     MARKER="# MODIFIED_BY_SCRIPT: refind.conf modified by this script"
-
     if grep -q "$MARKER" "$REFIND_CONF"; then
         warning "File was previously modified. Backup not recreated."
     else
@@ -118,7 +117,6 @@ list_icons() {
         echo -e "\nThe rEFInd directory was not found in /boot."
         return
     fi
-
     header "Icons found in the refind folder (relative to EFI/ path):"
     find "$dir" -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.icns" \) | \
         sed -E 's|^.*/(EFI/.*)|\1|' | sort
@@ -180,7 +178,6 @@ add_boot_stanza() {
     ask "Enter the initrd file name:" INITRD_FILE
     LOADER_PATH="${KERNEL_FILE}"
     INITRD_PATH="${INITRD_FILE}"
-
     if [ -f /boot/refind_linux.conf ]; then
         header "Contents of refind_linux.conf"
         sed 's/^/  /' /boot/refind_linux.conf
@@ -205,7 +202,6 @@ add_boot_stanza() {
                 ;;
         esac
     fi
-
     echo
     echo -e "${YELLOW}Example: quiet zswap.enabled=0 root=PARTUUID=xxxx-xxxx rw rootflags=subvol=@ quiet splash${NC}"
     echo
@@ -241,7 +237,6 @@ configure_refind_btrfs() {
     reset
     local REFIND_BTRFS_CONF="/etc/refind-btrfs.conf"
     local BACKUP_RB="/etc/refind-btrfs.conf.bak"
-
     header "Configure refind-btrfs"
 
     # Create backup if needed
@@ -443,7 +438,6 @@ configure_refind_btrfs() {
 restore_refind_btrfs_backup() {
     local REFIND_BTRFS_CONF="/etc/refind-btrfs.conf"
     local BACKUP_FILE="${REFIND_BTRFS_CONF}.bak"
-
     info "Searching for refind-btrfs.conf in /etc..."
     [ -f "$REFIND_BTRFS_CONF" ] && success "Found: $REFIND_BTRFS_CONF" || { error "File not found."; return; }
     [ -f "$BACKUP_FILE" ] && sudo cp "$BACKUP_FILE" "$REFIND_BTRFS_CONF" && success "Backup restored!" || error "Backup not found: $BACKUP_FILE"
@@ -453,6 +447,7 @@ restore_refind_btrfs_backup() {
 
 # Edit refind.conf with nano
 edit_refind_conf() {
+    reset
     find_refind_conf
     info "Opening $REFIND_CONF in nano..."
     nano "$REFIND_CONF"
@@ -476,6 +471,7 @@ edit_refind_btrfs_conf() {
 
 # Function to create a BTRFS snapshot using snapper and update rEFInd via refind-btrfs
 create_btrfs_snapshot() {
+    reset
     header "Create BTRFS Snapshot"
 
     # Ask the user for the snapshot name
@@ -486,18 +482,14 @@ create_btrfs_snapshot() {
         error "Snapshot name cannot be empty. Operation aborted."
         return 1
     fi
-
     info "Creating snapshot '${snapshot_name}' using snapper..."
 
     # Create the snapshot using snapper with the provided description
     snapper create --description "${snapshot_name}"
-
     if [ $? -eq 0 ]; then
         snapper list
         success "Snapshot '${snapshot_name}' created successfully!"
-
         info "Updating refind-btrfs..."
-        # Execute the command to update rEFInd with the new snapshot
         refind-btrfs
         if [ $? -eq 0 ]; then
             success "rEFInd was updated with the new snapshot!"
