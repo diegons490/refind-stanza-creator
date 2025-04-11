@@ -229,7 +229,7 @@ add_boot_stanza() {
         info "Operation canceled. No changes made."
     fi
     info "Returning to main menu..."
-    return
+    pause
 }
 
 # Configure refind-btrfs
@@ -442,31 +442,89 @@ restore_refind_btrfs_backup() {
     [ -f "$REFIND_BTRFS_CONF" ] && success "Found: $REFIND_BTRFS_CONF" || { error "File not found."; return; }
     [ -f "$BACKUP_FILE" ] && sudo cp "$BACKUP_FILE" "$REFIND_BTRFS_CONF" && success "Backup restored!" || error "Backup not found: $BACKUP_FILE"
     info "Returning to main menu..."
-    return
+    pause
 }
 
-# Edit refind.conf with nano
+# Single pause function
+pause() {
+    echo
+    read -r -p "Press Enter to return to the menu..." < /dev/tty
+    clear
+}
+
+# Function to choose the editor
+choose_editor() {
+    echo
+    echo "Choose a text editor to open the file:"
+    echo "1) nano"
+    echo "2) micro"
+    echo "3) vim"
+    echo "4) vi"
+    echo "5) ne"
+    echo "6) joe"
+    echo "7) emacs (terminal mode)"
+    echo "8) other (type the name)"
+    read -rp "Option [1-8]: " choice
+
+    case "$choice" in
+        1) editor_cmd="nano" ;;
+        2) editor_cmd="micro" ;;
+        3) editor_cmd="vim" ;;
+        4) editor_cmd="vi" ;;
+        5) editor_cmd="ne" ;;
+        6) editor_cmd="joe" ;;
+        7)
+            echo
+            echo "[INFO] Emacs in graphical mode may cause unexpected behavior when run via sudo."
+            echo "Use only if you know what you're doing."
+            editor_cmd="emacs -nw"
+            ;;
+        8)
+            read -rp "Enter the editor name: " editor_cmd
+            ;;
+        *)
+            echo "Invalid option. Using nano as default."
+            editor_cmd="nano"
+            ;;
+    esac
+
+    local editor_bin
+    editor_bin=$(awk '{print $1}' <<< "$editor_cmd")
+
+    if ! command -v "$editor_bin" >/dev/null 2>&1; then
+        echo
+        echo "[ERROR] The editor '$editor_bin' is not installed on the system."
+        echo "Install it before trying again."
+        echo
+        return 1
+    fi
+}
+
+# Edit refind.conf with the chosen editor
 edit_refind_conf() {
     reset
     find_refind_conf
-    info "Opening $REFIND_CONF in nano..."
-    nano "$REFIND_CONF"
-    info "Returning to main menu..."
-    return
+    choose_editor || { info "Returning to the main menu..."; pause; return; }
+    info "Opening $REFIND_CONF with the editor: $editor_cmd"
+    $editor_cmd "$REFIND_CONF"
+    info "Returning to the main menu..."
+    pause
 }
 
-# Edit refind-btrfs.conf with nano
+# Edit refind-btrfs.conf with the chosen editor
 edit_refind_btrfs_conf() {
     reset
     local CONF="/etc/refind-btrfs.conf"
-    if [ -f "$CONF" ]; then
-        info "Opening $CONF in nano..."
-        nano "$CONF"
-    else
+    if [ ! -f "$CONF" ]; then
         error "File $CONF not found."
+        pause
+        return
     fi
-    info "Returning to main menu..."
-    return
+    choose_editor || { info "Returning to the main menu..."; pause; return; }
+    info "Opening $CONF with the editor: $editor_cmd"
+    $editor_cmd "$CONF"
+    info "Returning to the main menu..."
+    pause
 }
 
 # Function to create a BTRFS snapshot using snapper and update rEFInd via refind-btrfs
@@ -507,8 +565,8 @@ main_menu() {
     header "rEFInd Configuration Assistant"
     echo -e "${GREEN}1)${NC} Add new boot stanza"
     echo -e "${GREEN}2)${NC} Configure refind-btrfs"
-    echo -e "${GREEN}3)${NC} Manually edit refind.conf (nano)"
-    echo -e "${GREEN}4)${NC} Manually edit refind-btrfs.conf (nano)"
+    echo -e "${GREEN}3)${NC} Manually edit refind.conf"
+    echo -e "${GREEN}4)${NC} Manually edit refind-btrfs.conf"
     echo -e "${GREEN}5)${NC} Restore refind.conf backup"
     echo -e "${GREEN}6)${NC} Restore refind-btrfs.conf backup"
     echo -e "${GREEN}7)${NC} Create BTRFS Snapshot with Snaper"
@@ -533,6 +591,4 @@ while true; do
         8) info "Exiting..."; exit 0 ;;
         *) error "Invalid option!" ;;
     esac
-    echo
-    read -p "Press Enter to continue..." dummy
 done

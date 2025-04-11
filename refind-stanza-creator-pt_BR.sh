@@ -229,7 +229,7 @@ adiciona_boot_stanza() {
         info "Operação cancelada. Nada foi alterado."
     fi
     info "Voltando ao menu principal..."
-    return
+    pausar
 }
 
 # Funções relacionadas ao refind-btrfs
@@ -442,31 +442,89 @@ restaurar_backup_refind_btrfs() {
     [ -f "$REFIND_BTRFS_CONF" ] && success "Encontrado: $REFIND_BTRFS_CONF" || { error "Arquivo não encontrado."; return; }
     [ -f "$BACKUP_FILE" ] && sudo cp "$BACKUP_FILE" "$REFIND_BTRFS_CONF" && success "Backup restaurado com sucesso!" || error "Backup não encontrado: $BACKUP_FILE"
     info "Voltando ao menu principal..."
-    return
+    pausar
 }
 
-# Funções de edição manual
+# Função de pausa única
+pausar() {
+    echo
+    read -r -p "Pressione Enter para voltar ao menu..." < /dev/tty
+    clear
+}
+
+# Função para escolher o editor
+escolher_editor() {
+    echo
+    echo "Escolha um editor de texto para abrir o arquivo:"
+    echo "1) nano"
+    echo "2) micro"
+    echo "3) vim"
+    echo "4) vi"
+    echo "5) ne"
+    echo "6) joe"
+    echo "7) emacs (modo terminal)"
+    echo "8) outro (digitar o nome)"
+    read -rp "Opção [1-8]: " escolha
+
+    case "$escolha" in
+        1) editor_cmd="nano" ;;
+        2) editor_cmd="micro" ;;
+        3) editor_cmd="vim" ;;
+        4) editor_cmd="vi" ;;
+        5) editor_cmd="ne" ;;
+        6) editor_cmd="joe" ;;
+        7)
+            echo
+            echo "[INFO] Emacs em modo gráfico pode causar comportamentos inesperados ao rodar via sudo."
+            echo "Use apenas se tiver certeza do que está fazendo."
+            editor_cmd="emacs -nw"
+            ;;
+        8)
+            read -rp "Digite o nome do editor: " editor_cmd
+            ;;
+        *)
+            echo "Opção inválida. Usando nano como padrão."
+            editor_cmd="nano"
+            ;;
+    esac
+
+    local editor_bin
+    editor_bin=$(awk '{print $1}' <<< "$editor_cmd")
+
+    if ! command -v "$editor_bin" >/dev/null 2>&1; then
+        echo
+        echo "[ERRO] O editor '$editor_bin' não está instalado no sistema."
+        echo "Instale-o antes de tentar usá-lo novamente."
+        echo
+        return 1
+    fi
+}
+
+# Editar refind.conf com editor escolhido
 editar_refind_conf() {
     reset
     busca_refind_conf
-    info "Abrindo $REFIND_CONF no nano..."
-    nano "$REFIND_CONF"
+    escolher_editor || { info "Voltando ao menu principal..."; pausar; return; }
+    info "Abrindo $REFIND_CONF com o editor: $editor_cmd"
+    $editor_cmd "$REFIND_CONF"
     info "Voltando ao menu principal..."
-    return
+    pausar
 }
 
-# Editar refind-btrfs com nano
+# Editar refind-btrfs.conf com editor escolhido
 editar_refind_btrfs_conf() {
     reset
     local CONF="/etc/refind-btrfs.conf"
-    if [ -f "$CONF" ]; then
-        info "Abrindo $CONF no nano..."
-        nano "$CONF"
-    else
+    if [ ! -f "$CONF" ]; then
         error "Arquivo $CONF não encontrado."
+        pausar
+        return
     fi
+    escolher_editor || { info "Voltando ao menu principal..."; pausar; return; }
+    info "Abrindo $CONF com o editor: $editor_cmd"
+    $editor_cmd "$CONF"
     info "Voltando ao menu principal..."
-    return
+    pausar
 }
 
 # Função para criar snapshot usando snapper e atualizar o rEFInd via refind-btrfs
@@ -507,8 +565,8 @@ menu_principal() {
     header "Assistente de configuração do rEFInd"
     echo -e "${GREEN}1)${NC} Adicionar nova boot stanza"
     echo -e "${GREEN}2)${NC} Configurar refind-btrfs"
-    echo -e "${GREEN}3)${NC} Editar manualmente refind.conf (nano)"
-    echo -e "${GREEN}4)${NC} Editar manualmente refind-btrfs.conf (nano)"
+    echo -e "${GREEN}3)${NC} Editar manualmente refind.conf"
+    echo -e "${GREEN}4)${NC} Editar manualmente refind-btrfs.conf"
     echo -e "${GREEN}5)${NC} Restaurar backup do refind.conf"
     echo -e "${GREEN}6)${NC} Restaurar backup do refind-btrfs.conf"
     echo -e "${GREEN}7)${NC} Criar Snapshot BTRFS com Snapper"
@@ -533,6 +591,4 @@ while true; do
         8) info "Saindo..."; exit 0 ;;
         *) error "Opção inválida!" ;;
     esac
-    echo
-    read -p "Pressione Enter para continuar..." dummy
 done
