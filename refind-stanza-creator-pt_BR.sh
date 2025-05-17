@@ -538,7 +538,7 @@ criar_snapshot_btrfs() {
     # Verifica se o nome foi informado
     if [ -z "$snapshot_name" ]; then
         error "Nome do snapshot não pode ser vazio. Operação abortada."
-        return 1
+        return
     fi
     info "Criando snapshot '${snapshot_name}' usando o snapper..."
 
@@ -556,8 +556,9 @@ criar_snapshot_btrfs() {
         fi
     else
         error "Falha ao criar o snapshot. Verifique se o snapper está instalado e se você possui as permissões necessárias."
-        return 1
+        return
     fi
+    pausar
 }
 
 # Menu principal

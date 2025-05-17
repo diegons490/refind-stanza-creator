@@ -558,6 +558,7 @@ create_btrfs_snapshot() {
         error "Failed to create the snapshot. Verify that snapper is installed and that you have the necessary permissions."
         return 1
     fi
+    pause
 }
 
 # Main Menu in English
