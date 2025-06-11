@@ -431,6 +431,7 @@ configure_refind_btrfs() {
         info "Snapshots não carregados."
     fi
     info "Voltando ao menu principal..."
+    pausar
     return
 }
 
