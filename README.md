@@ -1,4 +1,4 @@
-### refind stanza creator
+### rEFInd stanza creator
 ### AUTHOR: diegons490
 
 ### This script aims to facilitate the configuration of rEFInd and refind-btrfs (btrfs snapshots).
