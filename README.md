@@ -5,7 +5,7 @@
 
 ### It includes functions to create and restore backups of files
 
-### It is also possible to edit the files manually using nano directly from the terminal.
+### It is also possible to edit the files manually using nano or another editor directly from the terminal.
 
 ```shell
 $ sudo bash refind-stanza-creator-xx_XX.sh
