@@ -9,7 +9,7 @@
 ### 3 - Copy and paste partuuid:
 ![Partuuid](/tutorial-images/3-copy_and_paste_uuid.png)
 
-### 4 - For Chachy just press Enter:
+### 4 - For CachyOS just press Enter:
 ![Press Enter](/tutorial-images/4-for_chachy_just_press_enter.png)
 
 ### 5 - Copy and paste kernel:
