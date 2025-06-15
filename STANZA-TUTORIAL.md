@@ -3,7 +3,7 @@
 ### 1 - Run the Script:
 ![1 Run the script](/stanza-tutorial-imgs/1-command.png)
 
-### 2 - Type 1 to add a new boot stanza:
+### 2 - Type '1' to add a new boot stanza:
 ![Type 1](/stanza-tutorial-imgs/2-add_boot_stanza.png)
 
 ### 3 - Copy and paste partuuid:
@@ -27,7 +27,7 @@
 ### 8.2 - Paste the path of the CachyOS icon:
 ![Paste CachyOS Icon](/stanza-tutorial-imgs/8.2-paste_cachy_icon_location.png)
 
-### 9 - Type boot name (CachyOS):
+### 9 - Type boot name 'CachyOS':
 ![Boot Name](/stanza-tutorial-imgs/9-boot_name.png)
 
 ### 10 - Confirm add stanza:
