@@ -16,19 +16,19 @@ header() {
 }
 
 info() {
-    echo -e "${CYAN}[INFO]${NC} $1";
+    echo -e "${CYAN}[INFO]${NC} $1"
 }
 
 success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1";
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
 }
 
 warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1";
+    echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
 error() {
-    echo -e "${RED}[ERROR]${NC} $1";
+    echo -e "${RED}[ERROR]${NC} $1"
 }
 
 ask() {
@@ -62,7 +62,7 @@ create_backup() {
         warning "File was previously modified. Backup not recreated."
     else
         [ ! -f "$BACKUP_FILE" ] && cp "$REFIND_CONF" "$BACKUP_FILE" && success "Backup at $BACKUP_FILE"
-        echo -e "\n$MARKER" >> "$REFIND_CONF"
+        echo -e "\n$MARKER" >>"$REFIND_CONF"
         info "Marker added to $REFIND_CONF"
     fi
 }
@@ -118,7 +118,7 @@ list_icons() {
         return
     fi
     header "Icons found in the refind folder (relative to EFI/ path):"
-    find "$dir" -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.icns" \) | \
+    find "$dir" -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.icns" \) |
         sed -E 's|^.*/(EFI/.*)|\1|' | sort
     echo
 }
@@ -186,20 +186,20 @@ add_boot_stanza() {
         echo
         read -p "Would you like to create a new file using the mkrlconf command? [y/N]: " response
         case "$response" in
-            [yY]|[yY][eE][sS])
-                mkrlconf
-                if [ -f /boot/refind_linux.conf ]; then
-                    success "File created successfully!"
-                    header "Contents of refind_linux.conf"
-                    sed 's/^/  /' /boot/refind_linux.conf
-                else
-                    error "Failed to create refind_linux.conf file."
-                    echo -e "${YELLOW}You will need to manually enter the kernel parameters.${NC}"
-                fi
-                ;;
-            *)
+        [yY] | [yY][eE][sS])
+            mkrlconf
+            if [ -f /boot/refind_linux.conf ]; then
+                success "File created successfully!"
+                header "Contents of refind_linux.conf"
+                sed 's/^/  /' /boot/refind_linux.conf
+            else
+                error "Failed to create refind_linux.conf file."
                 echo -e "${YELLOW}You will need to manually enter the kernel parameters.${NC}"
-                ;;
+            fi
+            ;;
+        *)
+            echo -e "${YELLOW}You will need to manually enter the kernel parameters.${NC}"
+            ;;
         esac
     fi
     echo
@@ -223,7 +223,7 @@ add_boot_stanza() {
     echo -e "$BOOT_STANZA" | sed 's/^/  /'
     ask "Add to refind.conf? (y/n):" CONFIRM
     if [[ "$CONFIRM" =~ ^[yY]$ ]]; then
-        echo -e "\n$BOOT_STANZA" >> "$REFIND_CONF"
+        echo -e "\n$BOOT_STANZA" >>"$REFIND_CONF"
         success "Entry added to $REFIND_CONF."
     else
         info "Operation canceled. No changes made."
@@ -440,7 +440,10 @@ restore_refind_btrfs_backup() {
     local REFIND_BTRFS_CONF="/etc/refind-btrfs.conf"
     local BACKUP_FILE="${REFIND_BTRFS_CONF}.bak"
     info "Searching for refind-btrfs.conf in /etc..."
-    [ -f "$REFIND_BTRFS_CONF" ] && success "Found: $REFIND_BTRFS_CONF" || { error "File not found."; return; }
+    [ -f "$REFIND_BTRFS_CONF" ] && success "Found: $REFIND_BTRFS_CONF" || {
+        error "File not found."
+        return
+    }
     [ -f "$BACKUP_FILE" ] && sudo cp "$BACKUP_FILE" "$REFIND_BTRFS_CONF" && success "Backup restored!" || error "Backup not found: $BACKUP_FILE"
     info "Returning to main menu..."
     pause
@@ -449,7 +452,7 @@ restore_refind_btrfs_backup() {
 # Single pause function
 pause() {
     echo
-    read -r -p "Press Enter to return to the menu..." < /dev/tty
+    read -r -p "Press Enter to return to the menu..." </dev/tty
     clear
 }
 
@@ -468,29 +471,29 @@ choose_editor() {
     read -rp "Option [1-8]: " choice
 
     case "$choice" in
-        1) editor_cmd="nano" ;;
-        2) editor_cmd="micro" ;;
-        3) editor_cmd="vim" ;;
-        4) editor_cmd="vi" ;;
-        5) editor_cmd="ne" ;;
-        6) editor_cmd="joe" ;;
-        7)
-            echo
-            echo "[INFO] Emacs in graphical mode may cause unexpected behavior when run via sudo."
-            echo "Use only if you know what you're doing."
-            editor_cmd="emacs -nw"
-            ;;
-        8)
-            read -rp "Enter the editor name: " editor_cmd
-            ;;
-        *)
-            echo "Invalid option. Using nano as default."
-            editor_cmd="nano"
-            ;;
+    1) editor_cmd="nano" ;;
+    2) editor_cmd="micro" ;;
+    3) editor_cmd="vim" ;;
+    4) editor_cmd="vi" ;;
+    5) editor_cmd="ne" ;;
+    6) editor_cmd="joe" ;;
+    7)
+        echo
+        echo "[INFO] Emacs in graphical mode may cause unexpected behavior when run via sudo."
+        echo "Use only if you know what you're doing."
+        editor_cmd="emacs -nw"
+        ;;
+    8)
+        read -rp "Enter the editor name: " editor_cmd
+        ;;
+    *)
+        echo "Invalid option. Using nano as default."
+        editor_cmd="nano"
+        ;;
     esac
 
     local editor_bin
-    editor_bin=$(awk '{print $1}' <<< "$editor_cmd")
+    editor_bin=$(awk '{print $1}' <<<"$editor_cmd")
 
     if ! command -v "$editor_bin" >/dev/null 2>&1; then
         echo
@@ -505,7 +508,11 @@ choose_editor() {
 edit_refind_conf() {
     reset
     find_refind_conf
-    choose_editor || { info "Returning to the main menu..."; pause; return; }
+    choose_editor || {
+        info "Returning to the main menu..."
+        pause
+        return
+    }
     info "Opening $REFIND_CONF with the editor: $editor_cmd"
     $editor_cmd "$REFIND_CONF"
     info "Returning to the main menu..."
@@ -521,7 +528,11 @@ edit_refind_btrfs_conf() {
         pause
         return
     fi
-    choose_editor || { info "Returning to the main menu..."; pause; return; }
+    choose_editor || {
+        info "Returning to the main menu..."
+        pause
+        return
+    }
     info "Opening $CONF with the editor: $editor_cmd"
     $editor_cmd "$CONF"
     info "Returning to the main menu..."
@@ -583,14 +594,17 @@ while true; do
     reset
     main_menu
     case $option in
-        1) add_boot_stanza ;;
-        2) configure_refind_btrfs ;;
-        3) edit_refind_conf ;;
-        4) edit_refind_btrfs_conf ;;
-        5) restore_backup_refind ;;
-        6) restore_backup_refind_btrfs ;;
-        7) create_btrfs_snapshot ;;
-        8) info "Exiting..."; exit 0 ;;
-        *) error "Invalid option!" ;;
+    1) add_boot_stanza ;;
+    2) configure_refind_btrfs ;;
+    3) edit_refind_conf ;;
+    4) edit_refind_btrfs_conf ;;
+    5) restore_backup_refind ;;
+    6) restore_backup_refind_btrfs ;;
+    7) create_btrfs_snapshot ;;
+    8)
+        info "Exiting..."
+        exit 0
+        ;;
+    *) error "Invalid option!" ;;
     esac
 done
