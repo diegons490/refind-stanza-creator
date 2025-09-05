@@ -30,7 +30,7 @@
 ### 9 - Type boot name 'CachyOS':
 ![Boot Name](/stanza-tutorial-imgs/9-boot_name.png)
 
-### 9.1 - You can add a submenu for an LTS kernel, if you don't want to, finish and go directly to step 10:
+### 9.1 - You can add a submenu for an LTS kernel, if you don't want to, finish by typing "n" and pressing Enter, and go directly to step 10:
 ![Confirm](/stanza-tutorial-imgs/9.1-submenu.png)
 
 ### 9.2 - Copy and paste LTS kernel:
